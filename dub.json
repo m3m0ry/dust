@@ -1,0 +1,9 @@
+{
+	"authors": [
+		"Jan Hoenig"
+	],
+	"copyright": "Copyright © 2020, Jan Hoenig",
+	"description": "A minimal D application.",
+	"license": "proprietary",
+	"name": "dust"
+}
