@@ -6,7 +6,10 @@ import helper;
 string mine()
 {
 	auto sym = symbols!real(["a", "b", "c"]);
-	auto n = new Assignment(sym[2], new Expression("+", [sym[1], sym[0]]));
+	auto a = sym[0];
+	auto b = sym[1];
+	auto c = sym[2];
+	auto n = c = a + b;
 	auto n2 = new Block([n, new Statement(new FunctionCall("writeln", [sym[2]]))]);
 	auto ret = format!"%s"(n2);
 	return ret;

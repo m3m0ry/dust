@@ -8,19 +8,37 @@ import std.string;
 // TODO check https://wiki.dlang.org/Defining_custom_print_format_specifiers for cooler toString methods
 
 ///Base class for all nodes
-class Node{
+abstract class Node{
     abstract override string toString() const;
         // TODO implement opBinary
         // TODO auto morph numerics to constants
 }
 
+///Bace class for all arithmetic nodes
+abstract class Arithmetic : Node{
+    auto opBinary(string op)(const Arithmetic rhs) const
+    {
+        return new Expression(op, [this, rhs]);
+    }
+    auto opBinary(string op, N)(const N rhs) const if (isNumeric!N)
+    {
+        return new Expression(op, [this, Constant(rhs)]);
+    }
+    auto opBinaryRight(string op, N)(const N lhs) const if (isNumeric!N)
+    {
+        return new Expression(op, [lhs, this]);
+    }
+}
+
+
+
 /// Symbol node
-class Symbol(T) : Node  if (isNumeric!T)
+class Symbol(T) : Arithmetic  if (isNumeric!T)
 {
     /// Symbol's name
-    string name;
+    const string name;
     /// Constructor
-    this(string s)
+    this(const string s)
     {
         name = s;
     }
@@ -28,15 +46,29 @@ class Symbol(T) : Node  if (isNumeric!T)
     {
         return name;
     }
+    auto opAssign(T)(T value) if (isNumeric!T)
+    {
+        auto assign = new Assignment(this, new Constant!T(value));
+        return assign;
+    }
+    auto opAssign(const Arithmetic value)
+    {
+        auto assign = new Assignment(this, value);
+        return assign;
+    }
+    auto opOpAssign(string op, T)(T value) if (isNumeric!T || T == Arithmetic)
+    {
+        return this = opBinary!op(value);
+    }
 }
 
 /// Constant node
-class Constant(T) : Node
+class Constant(T) : Arithmetic
 {
     /// Constant's value
-    T value;
+    const T value;
     /// Constructor
-    this(T)(T v) if (isNumeric!T)
+    this(T)(const T v) if (isNumeric!T)
     {
         value = v;
     }
@@ -47,7 +79,7 @@ class Constant(T) : Node
 }
 
 /// Field node
-class Field(T) : Node
+class Field(T) : Arithmetic
 {
 
 }
@@ -59,14 +91,14 @@ class Loop : Node
 }
 
 /// Expressions
-class Expression : Node
+class Expression : Arithmetic
 {
     /// Expression's string
-    string expr;
+    const string expr;
     /// Expression's args
-    Node[] args;
+    const Node[] args;
     /// Constructor
-    this(string e, Node[] a)
+    this(const string e, const Node[] a)
     {
         expr = e;
         args = a;
@@ -78,14 +110,14 @@ class Expression : Node
 }
 
 /// FunctionCall node
-class FunctionCall : Node
+class FunctionCall : Arithmetic
 {
     /// Function
-    string func;
+    const string func;
     /// Arguments
-    Node[] args;
+    const Node[] args;
     /// Constructor
-    this(string f, Node[] a)
+    this(const string f, const Node[] a)
     {
         func = f;
         args = a;
@@ -100,9 +132,9 @@ class FunctionCall : Node
 class Block : Node
 {
     /// Nodes in the block
-    Node[] nodes;
+    const Node[] nodes;
     /// Constructor
-    this(Node[] n)
+    this(const Node[] n)
     {
         nodes = n;
     }
@@ -117,9 +149,9 @@ class Block : Node
 class Statement : Node
 {
     /// Statement
-    Node stat;
+    const Node stat;
     /// Constructor
-    this(Node s)
+    this(const Node s)
     {
         stat = s;
     }
@@ -133,11 +165,11 @@ class Statement : Node
 class Assignment : Node
 {
     /// Left-hand side
-    Node lhs;
+    const Node lhs;
     /// Right-hand side
-    Node rhs;
+    const Node rhs;
     /// Constructor
-    this(Node l, Node r)
+    this(const Node l, const Node r)
     {
         lhs = l;
         rhs = r;
