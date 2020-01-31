@@ -22,11 +22,11 @@ abstract class Arithmetic : Node{
     }
     auto opBinary(string op, N)(const N rhs) const if (isNumeric!N)
     {
-        return new Expression(op, [this, Constant(rhs)]);
+        return new Expression(op, [this, new Constant(rhs)]);
     }
     auto opBinaryRight(string op, N)(const N lhs) const if (isNumeric!N)
     {
-        return new Expression(op, [lhs, this]);
+        return new Expression(op, [new Constant(lhs), this]);
     }
 }
 
