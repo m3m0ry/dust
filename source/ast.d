@@ -10,8 +10,6 @@ import std.string;
 ///Base class for all nodes
 abstract class Node{
     abstract override string toString() const;
-        // TODO implement opBinary
-        // TODO auto morph numerics to constants
 }
 
 ///Bace class for all arithmetic nodes
@@ -22,11 +20,11 @@ abstract class Arithmetic : Node{
     }
     auto opBinary(string op, N)(const N rhs) const if (isNumeric!N)
     {
-        return new Expression(op, [this, new Constant(rhs)]);
+        return new Expression(op, [this, new Constant!N(rhs)]);
     }
     auto opBinaryRight(string op, N)(const N lhs) const if (isNumeric!N)
     {
-        return new Expression(op, [new Constant(lhs), this]);
+        return new Expression(op, [new Constant!N(lhs), this]);
     }
 }
 
@@ -46,7 +44,7 @@ class Symbol(T) : Arithmetic  if (isNumeric!T)
     {
         return name;
     }
-    auto opAssign(T)(T value) if (isNumeric!T)
+    auto opAssign(T)(const T value) if (isNumeric!T)
     {
         auto assign = new Assignment(this, new Constant!T(value));
         return assign;
@@ -56,7 +54,11 @@ class Symbol(T) : Arithmetic  if (isNumeric!T)
         auto assign = new Assignment(this, value);
         return assign;
     }
-    auto opOpAssign(string op, T)(T value) if (isNumeric!T || T == Arithmetic)
+    auto opOpAssign(string op, T)(const T value) if (isNumeric!T)
+    {
+        return this = opBinary!op(value);
+    }
+    auto opOpAssign(string op)(const Arithmetic value)
     {
         return this = opBinary!op(value);
     }
