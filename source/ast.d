@@ -4,6 +4,9 @@ import std.conv;
 import std.format;
 import std.algorithm;
 import std.string;
+import std.exception;
+import std.range;
+import core.vararg;
 
 // TODO check https://wiki.dlang.org/Defining_custom_print_format_specifiers for cooler toString methods
 
@@ -28,15 +31,13 @@ abstract class Arithmetic : Node{
     }
 }
 
-
-
 /// Symbol node
 class Symbol(T) : Arithmetic  if (isNumeric!T)
 {
     /// Symbol's name
-    const string name;
+    string name;
     /// Constructor
-    this(const string s)
+    this(string s)
     {
         name = s;
     }
@@ -46,7 +47,7 @@ class Symbol(T) : Arithmetic  if (isNumeric!T)
     }
     auto opAssign(T)(const T value) if (isNumeric!T)
     {
-        auto assign = new Assignment(this, new Constant!T(value));
+        auto assign = new Assignment(this, new Constant!T(value)); // TODO does this work without !T
         return assign;
     }
     auto opAssign(const Arithmetic value)
@@ -76,20 +77,67 @@ class Constant(T) : Arithmetic
     }
     override string toString() const
     {
-        return format!"%s"(value);
+        return value.to!string;
     }
 }
 
 /// Field node
-class Field(T) : Arithmetic
+class Field(T) : Node
 {
+    string name;
+    const size_t dim;
+    const size_t[] size = [0,0,0];
+    this(string n, const size_t d)
+    {
+        name = n;
+        dim = d;
+    }
+    this(string n, const size_t d, const size_t[] s)
+    {
+        assert(d == s.length);
+        name = n;
+        dim = d;
+        size = s;
+    }
+    override string toString() const
+    {
+        return format!"%s%s"(name, dim);
+    }
+    FieldAccess!T opIndex(int[] access...) const
+    {
+        return new FieldAccess!T(this, access);
+    }
+}
 
+/// Field access node
+class FieldAccess(T) : Symbol!T
+{
+    const Field!T field;
+    const int[] access;
+    this(const Field!T f, const int[] a)
+    {
+        field = f;
+        access = a;
+        super(field.name);
+    }
+    override string toString() const
+    {
+        return format!"%s%s"(field.name, access);
+    }
 }
 
 /// Loop node
-class Loop : Node
+class Loop(T) : Node
 {
-
+    const Symbol!T iter;
+    const Node block;
+    const size_t start;
+    const size_t end;
+    const size_t step = 1;
+    override string toString() const
+    {
+        return format!"for(%s %s = %s; %s < %s; %s=%s + %s)\n%s"(T, iter, start, iter, end, iter, iter, step, block);
+    }
 }
 
 /// Expressions

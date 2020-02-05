@@ -1,6 +1,7 @@
 import std.stdio;
 import std.format;
 import ast;
+import std.conv;
 import helper;
 
 string mine()
@@ -12,7 +13,13 @@ string mine()
 	auto n = c += a + b + 1;
 	auto n2 = new Block([n, new Statement(new FunctionCall("writeln", [sym[2]]))]);
 	auto ret = format!"%s"(n2);
-	return ret;
+	
+	auto fs = fields!real(["A", "B"], 2, [128,128]);
+	auto A = fs[0];
+	auto B = fs[1];
+	auto jacobi = B[0] = (A[1,0] + A[0,1] + A[-1,0] + A[0,-1])/4;
+
+	return jacobi.to!string;
 }
 
 void main()
@@ -22,5 +29,5 @@ void main()
 	real c = 3;
 	enum string s = mine;
 	writeln(s);
-	mixin(s);
+	//mixin(s);
 }
