@@ -17,7 +17,7 @@ string mine()
 	auto fs = fields!real(["A", "B"], 2, [128,128]);
 	auto A = fs[0];
 	auto B = fs[1];
-	auto jacobi = B[0] = (A[1,0] + A[0,1] + A[-1,0] + A[0,-1])/4;
+	auto jacobi = B[0] = 1./4. *(A[1,0] + A[0,1] + A[-1,0] + A[0,-1]);
 
 	return jacobi.to!string;
 }

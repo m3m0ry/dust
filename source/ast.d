@@ -1,4 +1,6 @@
 module ast;
+import fpconv_ctfe;
+
 import std.traits;
 import std.conv;
 import std.format;
@@ -7,6 +9,7 @@ import std.string;
 import std.exception;
 import std.range;
 import core.vararg;
+
 
 // TODO check https://wiki.dlang.org/Defining_custom_print_format_specifiers for cooler toString methods
 
@@ -77,7 +80,10 @@ class Constant(T) : Arithmetic
     }
     override string toString() const
     {
-        return value.to!string;
+        static if(isFloatingPoint!T)
+            return fpconv_dtoa(value);
+        else
+            return value.to!string;
     }
 }
 
